@@ -403,3 +403,140 @@ server/
 - **Gagal konek database** — pastikan PostgreSQL berjalan dan `DATABASE_URL` benar (host, port, user, password, nama database).
 - **`Error: P1003 Database 'dev_db_fms_shadow' does not exist`** — shadow database belum dibuat. Buat dulu dengan `psql -U postgres -c "CREATE DATABASE dev_db_fms_shadow;"` lalu jalankan ulang `npx prisma migrate dev`.
 - **`npm run typecheck` / `npm run build` error `Invalid value for '--ignoreDeprecations'`** — ini isu bawaan di `tsconfig.json` (`ignoreDeprecations: "6.0"` tidak didukung TypeScript 5.x). Ubah nilainya menjadi `"5.0"`.
+
+---
+
+# Frontend (Client)
+
+Antarmuka web untuk Field Service Management, berada di folder `client/`.
+
+### Tech Stack
+
+| Kategori | Teknologi |
+|----------|-----------|
+| Framework | **React 19** + **TypeScript** |
+| Build tool | **Vite 6** |
+| Styling | **TailwindCSS 4** |
+| Data fetching & cache | **@tanstack/react-query** |
+| Tabel | **@tanstack/react-table** + **rizzui** |
+| State autentikasi | **zustand** (dengan `persist` ke `localStorage`) |
+| Routing | **react-router v7** |
+| Utilitas UI | **react-icons**, **tailwind-merge**, **clsx**, **react-helmet-async** |
+
+> Basis awal adalah template admin TailAdmin, namun komponen & dependensi yang tidak dipakai sudah dibersihkan sehingga hanya menyisakan yang relevan dengan FMS.
+
+## Fitur Frontend
+
+- **Login** dengan JWT; token disimpan di `localStorage` (zustand `persist`) dan role di-decode dari token.
+- **Route terproteksi** — halaman dashboard hanya bisa diakses setelah login; halaman tertentu dibatasi per role (mis. Manajemen Pengguna hanya untuk Admin).
+- **Menu sidebar adaptif per role** (Admin melihat menu Manajemen Pengguna, Pelapor/Approver tidak).
+- **Dashboard** — ringkasan jumlah laporan per status (Total / Menunggu / Disetujui / Ditolak).
+- **Daftar Laporan** dengan pencarian, filter status, dan paginasi (server-side).
+- **Buat / Ubah laporan** lewat modal (Pelapor & Admin).
+- **Setujui / Tolak laporan** langsung dari tabel (Approver & Admin).
+- **Manajemen Pengguna** — Admin membuat akun Pelapor/Approver/Admin.
+- **Profil** — melihat role & user ID, serta **ubah password sendiri** (terhubung ke endpoint `/users/update-password`).
+- **Logout** — menghapus token dari store dan kembali ke halaman login.
+
+## Pemetaan Role ke UI
+
+| Role | Yang bisa dilakukan di UI |
+|------|---------------------------|
+| `ADMIN` | Semua: buat laporan, lihat semua laporan, setujui/tolak, dan buat akun pengguna baru |
+| `PELAPOR` | Buat laporan, lihat & ubah/hapus laporan miliknya sendiri (saat `PENDING`) |
+| `APPROVER` | Lihat semua laporan, setujui/tolak laporan `PENDING` |
+
+## Daftar Route
+
+| Path | Halaman | Akses |
+|------|---------|-------|
+| `/signin` | Login | Publik |
+| `/` | Dashboard (ringkasan laporan) | Semua role (login) |
+| `/reports` | Daftar laporan | Semua role (login) |
+| `/profile` | Profil & ubah password | Semua role (login) |
+| `/users` | Manajemen pengguna | **Admin saja** |
+| `*` | 404 Not Found | - |
+
+> Route di dalam dashboard dibungkus `ProtectedRoute`. Jika belum login, pengguna diarahkan ke `/signin`. Jika mengakses route Admin tanpa role `ADMIN`, diarahkan kembali ke `/`.
+
+## Menjalankan Frontend
+
+Prasyarat: **server backend sudah berjalan** di `http://localhost:5000` dan **akun Admin sudah di-seed** (`npm run db:seed` di folder `server/`).
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Vite akan menyajikan aplikasi (default `http://localhost:5173`). Buka di browser, lalu login dengan akun Admin default:
+
+- Email: `admin@example.com`
+- Password: `Admin#1234`
+
+Setelah login sebagai Admin, buka menu **Manajemen Pengguna** untuk membuat akun **Pelapor** dan **Approver**, lalu login dengan akun-akun tersebut untuk mencoba alur lengkap.
+
+### Build Produksi
+
+```bash
+npm run build      # output ke client/dist
+npm run preview    # pratinjau hasil build
+```
+
+## Konfigurasi Environment Frontend
+
+File `client/.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:5000
+VITE_API_PORTAL=/v1
+```
+
+> ⚠️ Gunakan `http://` (bukan `https://`) karena server development berjalan di HTTP. Gabungan keduanya membentuk base URL API: `http://localhost:5000/v1`.
+
+## Struktur Frontend (bagian penting)
+
+```
+client/src/
+├── api/
+│   ├── index.ts            # Base URL dari config env (VITE_API_BASE_URL + VITE_API_PORTAL)
+│   ├── http.ts             # Wrapper fetch (Bearer token + unwrap uni-response + ApiError)
+│   ├── auth.ts             # login, registerUser, updatePassword
+│   └── report.ts           # create / list / get / update / updateStatus / delete laporan
+├── model/
+│   ├── auth.ts             # Tipe UserRole, payload login/register, JWT, AuthUser
+│   └── report.ts           # Tipe ReportModel, ReportStatus & payload
+├── store/
+│   └── auth.ts             # Zustand store JWT + role (decode token, persist localStorage)
+├── routes/
+│   └── ProtectedRoute.tsx  # Guard autentikasi + pembatasan role
+├── pages/
+│   ├── AuthPages/SignIn     # Halaman login (terintegrasi API)
+│   ├── Dashboard/Home       # Ringkasan jumlah laporan per status
+│   ├── Reports/
+│   │   ├── ReportList.tsx       # Tabel laporan + search + filter + paginasi + aksi
+│   │   ├── ReportFormModal.tsx  # Modal buat/ubah laporan
+│   │   └── statusBadge.tsx      # Badge warna status
+│   ├── Users/UserManagement.tsx # Manajemen pengguna (Admin)
+│   ├── UserProfiles.tsx         # Profil + ubah password
+│   └── OtherPage/NotFound.tsx   # Halaman 404
+├── layout/
+│   ├── AppLayout.tsx       # Shell dashboard (sidebar + header + outlet)
+│   ├── AppHeader.tsx       # Header: toggle sidebar, theme, user dropdown
+│   └── AppSidebar.tsx      # Menu navigasi adaptif per role
+└── main.tsx                # Entry: ThemeProvider + Helmet + QueryClient + App
+```
+
+## Alur Pemakaian (skenario)
+
+1. **Admin** login → buat akun **Pelapor** & **Approver** di menu Manajemen Pengguna.
+2. **Pelapor** login → buat laporan (status awal `PENDING`) → hanya melihat laporannya sendiri.
+3. **Approver** login → melihat semua laporan → menyetujui (`APPROVED`) atau menolak (`REJECTED`) laporan `PENDING`.
+4. Status dan pemutus keputusan (`decidedBy`) langsung tercermin di daftar laporan.
+
+## Troubleshooting Frontend
+
+- **Semua request gagal / "Tidak dapat terhubung ke server"** — pastikan server backend berjalan di `http://localhost:5000` dan `client/.env` memakai `http://` (bukan `https://`). Setelah mengubah `.env`, restart `npm run dev`.
+- **Login berhasil tapi langsung ter-logout / menu tidak sesuai role** — token tersimpan di `localStorage` dengan key `fms-auth`. Hapus entri tersebut dari DevTools lalu login ulang bila data lama tidak valid.
+- **Tidak bisa membuka menu Manajemen Pengguna** — menu & route tersebut hanya untuk role `ADMIN`. Login dengan akun Admin.
+- **Belum ada akun untuk login** — jalankan `npm run db:seed` di folder `server/` untuk membuat akun Admin pertama, lalu buat akun lain dari menu Manajemen Pengguna.

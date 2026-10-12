@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "compilerOptions": {
+    "paths": {
+      "@api/*": [
+          "./src/api/*"
+        ],
+        "@models/*": [
+          "./src/models/*"
+        ]
+    }
+  },
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
