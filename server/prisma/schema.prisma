@@ -12,13 +12,24 @@ enum ReportStatus {
   REJECTED
 }
 
+enum UserRole {
+  ADMIN
+  PELAPOR
+  APPROVER
+}
+
 model User {
   id          String      @id @default(cuid())
   name        String
   email       String      @unique
   password    String
+  role        UserRole    @default(PELAPOR)
 
-  reports     Report[]
+  // Laporan yang dibuat oleh user (sebagai Pelapor)
+  reports         Report[] @relation("ReportAuthor")
+
+  // Laporan yang diputuskan (approve/reject) oleh user (sebagai Approver)
+  decidedReports  Report[] @relation("ReportDecider")
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -39,9 +50,16 @@ model Report {
 
   updatedAt   DateTime      @updatedAt
 
+  // Pembuat laporan (Pelapor)
   userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User          @relation("ReportAuthor", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Riwayat persetujuan: siapa yang approve/reject dan kapan
+  decidedById String?
+  decidedBy   User?         @relation("ReportDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt   DateTime?
 
   @@index([userId])
   @@index([status])
+  @@index([decidedById])
 }

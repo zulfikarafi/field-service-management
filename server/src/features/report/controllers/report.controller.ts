@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { UserRole } from "@prisma/client";
 
 import { ReportService } from "../services/report.service";
 
@@ -9,11 +10,23 @@ export class ReportController {
     this.reportService = reportService;
   }
 
+  private getActor(req: Request) {
+    return {
+      userId: req.userId as string,
+      role: req.role as UserRole,
+    };
+  }
+
+  // Buat Laporan
   createReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const response = await this.reportService.createReport(req.body);
+      // userId pembuat diambil dari token, bukan dari body
+      const response = await this.reportService.createReport({
+        ...req.body,
+        userId: req.userId as string,
+      });
 
-      res.status(201).json(response);
+      res.status(response.success ? 201 : 400).json(response);
     } catch (error) {
       next(error);
     }
@@ -23,12 +36,15 @@ export class ReportController {
     try {
       const { reportId } = req.params;
 
-      const response = await this.reportService.updateReport({
-        id: reportId,
-        ...req.body,
-      });
+      const response = await this.reportService.updateReport(
+        {
+          id: reportId,
+          ...req.body,
+        },
+        this.getActor(req)
+      );
 
-      res.status(200).json(response);
+      res.status(response.success ? 200 : 403).json(response);
     } catch (error) {
       next(error);
     }
@@ -38,9 +54,12 @@ export class ReportController {
     try {
       const reportId = req.params.reportId;
 
-      const response = await this.reportService.deleteReport(reportId);
+      const response = await this.reportService.deleteReport(
+        reportId,
+        this.getActor(req)
+      );
 
-      res.status(200).json(response);
+      res.status(response.success ? 200 : 403).json(response);
     } catch (error) {
       next(error);
     }
@@ -50,19 +69,24 @@ export class ReportController {
     try {
       const { reportId } = req.params;
 
-      const response = await this.reportService.getReportById(reportId);
+      const response = await this.reportService.getReportById(
+        reportId,
+        this.getActor(req)
+      );
 
-      res.status(200).json(response);
+      res.status(response.success ? 200 : 403).json(response);
     } catch (error) {
       next(error);
     }
   };
 
+  // Tampilkan Daftar Laporan
   listAllReports = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId, status, searchTerm, skip, take } = req.body;
 
       const response = await this.reportService.listAllReports(
+        this.getActor(req),
         Number(skip ?? 0),
         Number(take ?? 10),
         (searchTerm as string) ?? "",
@@ -76,6 +100,7 @@ export class ReportController {
     }
   };
 
+  // Ubah status menjadi APPROVED / REJECTED
   updateReportStatus = async (
     req: Request,
     res: Response,
@@ -87,10 +112,11 @@ export class ReportController {
 
       const response = await this.reportService.updateReportStatus(
         reportId,
-        status
+        status,
+        this.getActor(req)
       );
 
-      res.status(200).json(response);
+      res.status(response.success ? 200 : 403).json(response);
     } catch (error) {
       next(error);
     }

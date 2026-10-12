@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UserRole } from "@prisma/client";
 import { ERROR } from "../../../constants/messages";
 
 const passwordSchema = z
@@ -29,7 +30,12 @@ export const createUserSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters long",
   }),
-  
+
+  role: z
+    .nativeEnum(UserRole, {
+      message: "Invalid user role",
+    })
+    .optional(),
 });
 
 // Login schema

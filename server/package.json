@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ci": "vitest --run",
+    "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
     "prepare": "husky"
   },
@@ -62,8 +63,5 @@
     "pino-pretty": "^13.0.0",
     "uni-response": "^1.0.3",
     "zod": "^3.24.2"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   }
 }

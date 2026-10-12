@@ -17,10 +17,6 @@ export const createReportSchema = z.object({
     .optional(),
 
   location: z.string().optional(),
-
-  userId: z.string().min(1, {
-    message: "User ID is required",
-  }),
 });
 
 export const updateReportSchema = z.object({

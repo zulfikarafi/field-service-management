@@ -76,6 +76,9 @@ export class ReportRepository {
         description: true,
         status: true,
         location: true,
+        userId: true,
+        decidedById: true,
+        decidedAt: true,
         createdAt: true,
         updatedAt: true,
         user: {
@@ -83,6 +86,12 @@ export class ReportRepository {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        decidedBy: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },
@@ -140,17 +149,31 @@ export class ReportRepository {
     });
   }
 
-  async updateReportStatus(reportId: string, status: ReportStatus) {
+  async updateReportStatus(
+    reportId: string,
+    status: ReportStatus,
+    decidedById: string
+  ) {
     return this.prisma.report.update({
       where: {
         id: reportId,
       },
       data: {
         status,
+        decidedById,
+        decidedAt: new Date(),
       },
       select: {
         id: true,
         status: true,
+        decidedById: true,
+        decidedAt: true,
+        decidedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }

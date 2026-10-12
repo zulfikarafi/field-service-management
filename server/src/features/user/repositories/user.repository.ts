@@ -1,5 +1,6 @@
 import {
-  PrismaClient
+  PrismaClient,
+  UserRole
 } from "@prisma/client";
 
 
@@ -14,11 +15,13 @@ export class UserRepository {
     name: string;
     email: string;
     password: string;
+    role?: UserRole;
   }) {
     return this.prisma.user.create({
       data,
       select: {
         id: true,
+        role: true,
       },
     });
   }

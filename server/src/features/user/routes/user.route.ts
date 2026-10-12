@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import { PrismaService } from "../../../config/prisma.config";
-import { auth } from "../../../middleware/auth.middleware";
+import { auth, checkUserRole } from "../../../middleware/auth.middleware";
 import { validateRequest } from "../../../middleware/validation.middleware";
 import { UserController } from "../controllers/user.controller";
 import { UserRepository } from "../repositories/user.repository";
@@ -22,8 +22,11 @@ const userController = new UserController(userService);
 
 const router = Router();
 
+// Pembuatan akun hanya oleh Admin (bukan registrasi mandiri)
 router.post(
   "/register",
+  auth,
+  checkUserRole(["ADMIN"]),
   validateRequest(createUserSchema),
   userController.register
 );

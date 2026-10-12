@@ -11,7 +11,7 @@ export class UserService {
   ) {}
 
   async register(registerInput: RegisterInputTypes) {
-    const { name, email, password } = registerInput;
+    const { name, email, password, role } = registerInput;
     const existingUser = await this.UserRepository.findUserByEmail(email);
     if (existingUser) {
       return unifiedResponse(false, ERROR.USER_EXISTS_WITH_EMAIL);
@@ -22,14 +22,15 @@ export class UserService {
         name,
         email,
         password: hashedPassword,
+        role,
       });
-    
-    const token = generateToken(newUser.id, name);
+
+    const token = generateToken(newUser.id, newUser.role);
 
     return unifiedResponse(
       true,
       SUCCESS.REGISTRATION_SUCCESSFUL,
-      { token}
+      { token }
     );
   }
 
@@ -46,7 +47,7 @@ export class UserService {
       return unifiedResponse(false, 'Invalid credentials');
     }
 
-    const token = generateToken(user.id, user.name || 'user');
+    const token = generateToken(user.id, user.role);
     return unifiedResponse(true, SUCCESS.LOGIN_SUCCESSFUL, { token });
   }
 
