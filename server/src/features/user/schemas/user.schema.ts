@@ -1,5 +1,6 @@
-import { z } from "zod";
 import { UserRole } from "@prisma/client";
+import { z } from "zod";
+
 import { ERROR } from "../../../constants/messages";
 
 const passwordSchema = z

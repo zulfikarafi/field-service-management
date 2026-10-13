@@ -1,9 +1,11 @@
 import bcrypt from 'bcrypt';
 import { unifiedResponse } from "uni-response";
+
+import { generateToken } from '@/utils/generate-token.util';
+
 import { ERROR, SUCCESS } from "../../../constants/messages";
 import { UserRepository } from "../repositories/user.repository";
 import { LoginInputTypes, RegisterInputTypes } from "../types/user.type";
-import { generateToken } from '@/utils/generate-token.util';
 
 export class UserService {
   constructor(

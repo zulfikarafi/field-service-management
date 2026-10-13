@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import { env } from './config/env-config';
 import reportRoutes from './features/report/routes/report.route';
 import userRoutes from './features/user/routes/user.route';
-
 import { apiErrorHandler, unmatchedRoutes } from './middleware/api-error.middleware';
 import { loggerMiddleware, pinoLogger } from './middleware/pino-logger';
 // import morgan from 'morgan';

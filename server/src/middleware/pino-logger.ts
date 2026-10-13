@@ -1,4 +1,4 @@
-/* eslint-disable node/no-process-env */
+ 
 // src/middleware/pino-logger.ts
 import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';

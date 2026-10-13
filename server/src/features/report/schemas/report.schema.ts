@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { ReportStatus } from "@prisma/client";
+import { z } from "zod";
 
 export const createReportSchema = z.object({
   name: z.string().min(1, {

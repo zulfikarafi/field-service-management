@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
 import { UserRole } from "@prisma/client";
+import { NextFunction, Request, Response } from "express";
 
 import { ReportService } from "../services/report.service";
 
