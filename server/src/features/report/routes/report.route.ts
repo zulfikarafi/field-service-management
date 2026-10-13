@@ -7,7 +7,6 @@ import { ReportController } from "../controllers/report.controller";
 import { ReportRepository } from "../repositories/report.repository";
 import {
   createReportSchema,
-  getReportByIdSchema,
   listReportsSchema,
   updateReportSchema,
   updateReportStatusSchema,
@@ -54,11 +53,8 @@ router.patch(
 
 router.delete("/:reportId", auth, reportController.deleteReport);
 
-router.get(
-  "/:reportId",
-  auth,
-  validateRequest(getReportByIdSchema),
-  reportController.getReportById
-);
+// reportId berasal dari route param (bukan body), jadi tidak perlu
+// validateRequest yang memeriksa req.body. Keberadaan/not-found ditangani service.
+router.get("/:reportId", auth, reportController.getReportById);
 
 export default router;
