@@ -53,8 +53,6 @@ router.patch(
 
 router.delete("/:reportId", auth, reportController.deleteReport);
 
-// reportId berasal dari route param (bukan body), jadi tidak perlu
-// validateRequest yang memeriksa req.body. Keberadaan/not-found ditangani service.
 router.get("/:reportId", auth, reportController.getReportById);
 
 export default router;

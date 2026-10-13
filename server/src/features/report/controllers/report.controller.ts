@@ -17,10 +17,8 @@ export class ReportController {
     };
   }
 
-  // Buat Laporan
   createReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // userId pembuat diambil dari token, bukan dari body
       const response = await this.reportService.createReport({
         ...req.body,
         userId: req.userId as string,
@@ -80,7 +78,6 @@ export class ReportController {
     }
   };
 
-  // Tampilkan Daftar Laporan
   listAllReports = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId, status, searchTerm, skip, take } = req.body;
@@ -100,7 +97,6 @@ export class ReportController {
     }
   };
 
-  // Ubah status menjadi APPROVED / REJECTED
   updateReportStatus = async (
     req: Request,
     res: Response,
